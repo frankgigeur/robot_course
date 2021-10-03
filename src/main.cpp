@@ -1,10 +1,19 @@
 #include <Arduino.h>
 #include <LibRobus.h>
 
+#define TOUR_CM 23.9389360203542244771
 #define M_GAUCHE 0
 #define M_DROITE 1
+#define BACK_BUMPER 13
 
-bool test = true;
+bool run = false;
+const float distance[10] = {1.0,2.0,3.0,4.0,5.0,6.0,7.0,8.0,9.0,10.0};
+const float angle[9] = {1.0,2.0,3.0,4.0,5.0,6.0,7.0,8.0,9.0};
+
+
+void moveAlgo();
+void motors(char left_motor, char right_motor);
+float motorsPid(unsigned long long value_encoder);
 
 void setup()
 {
@@ -14,19 +23,40 @@ void setup()
 
 void loop()
 {
-
-  if (test)
+  if (digitalRead(BACK_BUMPER))
   {
-    MOTOR_SetSpeed(M_GAUCHE,0.9);
-    MOTOR_SetSpeed(M_DROITE,0.9061);
-    test =false;
+    run = true;
   }
+  else if (run)
+  {
+    moveAlgo();
+  }
+  else
+  {
+    motors(0, 0);
+  }
+}
 
-  char str[50];
+void moveAlgo()
+{
+}
 
-  delay(1000);
+void motors(char left_motor, char right_motor)
+{
 
-  sprintf(str, "Encodeur 1 : %ld\nEncodeur 2 : %ld\n %ld", ENCODER_Read(M_GAUCHE),ENCODER_Read(M_DROITE));
+float speed = motorsPid(ENCODER_Read(M_GAUCHE));
 
 
+
+MOTOR_SetSpeed(M_GAUCHE,speed * left_motor);
+MOTOR_SetSpeed(M_GAUCHE,1.0 * right_motor);
+
+}
+
+float motorsPid(unsigned long long value_encoder)
+{
+  float vitesse = 0;
+
+
+  return vitesse;
 }
