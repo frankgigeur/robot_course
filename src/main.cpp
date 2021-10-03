@@ -3,6 +3,7 @@
 
 #define M_GAUCHE 0
 #define M_DROITE 1
+#define KP 0.00001
 
 bool test = true;
 
@@ -29,4 +30,13 @@ void loop()
   sprintf(str, "Encodeur 1 : %ld\nEncodeur 2 : %ld\n %ld", ENCODER_Read(M_GAUCHE),ENCODER_Read(M_DROITE));
 
 
+}
+
+// Fonction corrigeant l'erreur du moteur droit en le considérant l'esclave du moteur gauche
+void CorrigerErreurMoteur(float vitesse)
+{
+  float errVitesse = 1/(ENCODER_Read(M_GAUCHE)-ENCODER_Read(M_DROITE));
+  float corrErr = vitesse + (errVitesse*KP);
+
+  MOTOR_SetSpeed(M_DROITE,corrErr);
 }
