@@ -18,8 +18,11 @@ void loop()
 
   if (test)
   {
-    MOTOR_SetSpeed(M_GAUCHE,0.9);
-    MOTOR_SetSpeed(M_DROITE,0.9061);
+    MOTOR_SetSpeed(M_GAUCHE,0.5);
+    MOTOR_SetSpeed(M_DROITE,0.2);
+
+    CorrigerErreurMoteur(0.5);
+
     test =false;
   }
 
@@ -35,7 +38,7 @@ void loop()
 // Fonction corrigeant l'erreur du moteur droit en le considérant l'esclave du moteur gauche
 void CorrigerErreurMoteur(float vitesse)
 {
-  float errVitesse = 1/(ENCODER_Read(M_GAUCHE)-ENCODER_Read(M_DROITE));
+  float errVitesse = (ENCODER_Read(M_GAUCHE)-ENCODER_Read(M_DROITE));
   float corrErr = vitesse + (errVitesse*KP);
 
   MOTOR_SetSpeed(M_DROITE,corrErr);
