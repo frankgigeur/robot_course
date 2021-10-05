@@ -3,9 +3,11 @@
 
 #define M_GAUCHE 0
 #define M_DROITE 1
-#define KP 0.00001
+#define KP 0.0008
 
 bool test = true;
+
+void CorrigerErreurMoteur(float vitesse);
 
 void setup()
 {
@@ -30,8 +32,8 @@ void loop()
 
   delay(1000);
 
-  sprintf(str, "Encodeur 1 : %ld\nEncodeur 2 : %ld\n %ld", ENCODER_Read(M_GAUCHE),ENCODER_Read(M_DROITE));
-
+  sprintf(str, "Encodeur 1 : %ld\nEncodeur 2 : %ld\n", ENCODER_Read(M_GAUCHE),ENCODER_Read(M_DROITE));
+  Serial.print(str);
 
 }
 
