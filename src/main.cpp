@@ -1,3 +1,13 @@
+/**
+ * @file main.cpp
+ * @author Ro13bots with attitUdeS
+ * @brief Code for a robot moving from point A to point B by making angles
+ * @version 0.8
+ * @date 2021-10-08
+ * 
+ * @copyright Copyright (c) 2021
+ * 
+ */
 #include <Arduino.h>
 #include <math.h>
 #include <LibRobus.h>
@@ -40,12 +50,51 @@ typedef enum t_mode
 
 e_mode mode = D;
 
+/**
+ * @brief Movement algorithm
+ * 
+ */
 void moveAlgo();
+
+/**
+ * @brief 
+ * 
+ * @param left_motor Reverse(-1) , Stop(0) , Forward(1) for the left motor.
+ * @param right_motor Reverse(-1) , Stop(0) , Forward(1) for the right motor.
+ * @param speed Set the initial speed for both motors
+ */
 void motors(char left_motor, char right_motor, float speed);
+
+/**
+ * @brief 
+ * 
+ * @return float The correction factor
+ */
 float motorsPid();
+
+/**
+ * @brief Turn off all motors
+ * 
+ */
 void motorsOff();
+
+/**
+ * @brief Reset all encoders
+ * 
+ */
 void encodersReset();
+
+/**
+ * @brief Set the Encoders Variables
+ * 
+ */
 void setEncodersVars();
+
+/**
+ * @brief Speed algorithm
+ * 
+ * @return float speed
+ */
 float setSpeed();
 
 void setup()
@@ -101,9 +150,6 @@ void moveAlgo()
 {
 
   setEncodersVars();
-
-  // char leftEncoderCheck = 1;
-  // char rightEncoderCheck = 1;
 
   // PRINT DISTANCE ET ANGLE
   if (index == indexOfIndex)
@@ -232,6 +278,7 @@ void setEncodersVars()
   leftEncoder = ENCODER_Read(M_GAUCHE);
   rightEncoder = ENCODER_Read(M_DROITE);
 }
+
 
 float setSpeed()
 {
