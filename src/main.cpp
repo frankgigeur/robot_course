@@ -16,8 +16,6 @@
 #define PULSE_PER_TURN 3200
 #define HALF_CIRCLE_IN_DEG 180
 #define WHEELS_RADIUS 9.3
-#define PATH_OFFSET 45
-#define OFFSET_START_STOP 10
 #define M_GAUCHE 0
 #define M_DROITE 1
 #define FRONT_BUMPER 26
@@ -28,19 +26,18 @@
 #define SLOPE 0.000375
 #define SPEED_OFFSET 0.15
 #define ANGLE_SPEED 0.4
-
-#define MAX_INDEX 14 // NEED TO BE SETTED
+#define DELAY_MBT 100
+#define MAX_INDEX 19 // NEED TO BE SETTED
 
 bool run = false;
-float distance[15] = {100.5, 49.5, 47.5, 49.5, 32.25, 52, 54.5, 54.5, 52, 32.25, 49.5, 47.5, 49.5, 100.5};
-float angle[14] = {90.0, -90.0, -90.0, 90.0, 45.0, -45.0, 185.0, 45.0, -45.0, -90.0, 90, 90, -90};
+float distance[19] = {223 , 50.5 , 45, 50.5, 31, 57, 72.5, 39, 85 , 85, 39, 72.5, 57, 31, 50.5, 45, 50.5, 223};
+float angle[19] = {90,-90,-90,90,-45,90,-45,-10,185,10,45,-90,45,-90,90,90,-90 };
+// float distance[15] = {100.5, 49.5, 47.5, 49.5, 32.25, 52, 54.5, 54.5, 52, 32.25, 49.5, 47.5, 49.5, 100.5};  // Parcours maison
+// float angle[14] = {90.0, -90.0, -90.0, 90.0, 45.0, -45.0, 185.0, 45.0, -45.0, -90.0, 90, 90, -90};
 long leftEncoder = 0;
 long rightEncoder = 0;
 unsigned int index = 0;
 const float kp = 0.0025;
-const float ki = 1;
-const float kd = 1;
-char reverse = 1;
 
 typedef enum t_mode
 {
@@ -99,13 +96,13 @@ float setSpeed();
 
 void setup()
 {
-  Serial.begin(9600);
+  BoardInit();
 
-  // ENLEVE UN OFFSET À LA DISTANCE POUR CENTRER LE ROBOT AU PARCOURS
+ // TRANSFORME LES DISTANCES EN PULSE D'ENCODEUR
   for (int i = 0; i < MAX_INDEX; i++)
   {
     float tmp = 0;
-    tmp = (distance[i] * 3200) / TOUR_CM;
+    tmp = (distance[i] * PULSE_PER_TURN) / TOUR_CM;
     distance[i] = tmp;
   }
 
@@ -116,8 +113,7 @@ void setup()
     tmp = (angle[i] * PI * WHEELS_RADIUS * PULSE_PER_TURN) / (HALF_CIRCLE_IN_DEG * TOUR_CM);
     angle[i] = tmp;
   }
-
-  BoardInit();
+  
 }
 
 void loop()
@@ -129,6 +125,7 @@ void loop()
     run = false;
     mode = D;
   }
+
   if (digitalRead(BACK_BUMPER))
   {
     encodersReset(); // POUR LES TEST
@@ -142,9 +139,10 @@ void loop()
   {
     motorsOff();
   }
+
 }
 
-unsigned int indexOfIndex = 0;
+// unsigned int indexOfIndex = 0;
 
 void moveAlgo()
 {
@@ -152,12 +150,12 @@ void moveAlgo()
   setEncodersVars();
 
   // PRINT DISTANCE ET ANGLE
-  if (index == indexOfIndex)
-  {
-    Serial.println(distance[index]);
-    Serial.println(angle[index]);
-    indexOfIndex++;
-  }
+  // if (index == indexOfIndex)
+  // {
+  //   Serial.println(distance[index]);
+  //   Serial.println(angle[index]);
+  //   indexOfIndex++;
+  // }
 
   switch (mode)
   {
@@ -201,17 +199,16 @@ void moveAlgo()
     {
       motorsOff();
       index++;
-      delay(100);
+      delay(DELAY_MBT);
       encodersReset();
       mode = D;
     }
     break;
-
   case D:
 
     if (distance[index] > leftEncoder)
     {
-      motors(1.0, 1.0, 1);
+      motors(1, 1, 1);
     }
     else
     {
@@ -221,7 +218,7 @@ void moveAlgo()
       }
 
       motorsOff();
-      delay(100);
+      delay(DELAY_MBT);
       encodersReset();
       mode = A;
     }
@@ -244,11 +241,6 @@ void motors(char left_motor, char right_motor, float speed)
     speed = setSpeed();
   }
 
-  // char str[50];
-
-  // sprintf(str, "\nG : %ld\nD : %ld",ENCODER_Read(M_GAUCHE),ENCODER_Read(M_DROITE));
-  // Serial.print(str);
-
   MOTOR_SetSpeed(M_GAUCHE, speed * left_motor);
   MOTOR_SetSpeed(M_DROITE, speed * right_motor + (pid * right_motor));
 }
@@ -258,6 +250,7 @@ float motorsPid()
 
   long error = abs(leftEncoder) - abs(rightEncoder);
   return (error * kp);
+
 }
 
 void motorsOff()
@@ -290,7 +283,7 @@ float setSpeed()
     {
       speed = SLOPE * leftEncoder + SPEED_OFFSET;
     }
-    else if(distance[index] - 5000 < leftEncoder)
+    else if(distance[index] - MAX_DELTA_STEPS < leftEncoder)
     {
       speed = SLOPE * (distance[index] - leftEncoder) + SPEED_OFFSET;
     }
