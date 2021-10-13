@@ -2,7 +2,7 @@
  * @file main.cpp
  * @author Ro13bots with attitUdeS
  * @brief Code for a robot moving from point A to point B by making angles
- * @version 0.81
+ * @version 0.82
  * @date 2021-10-08
  * 
  * @copyright Copyright (c) 2021
@@ -15,8 +15,10 @@
 #define TOUR_CM 23.939
 #define PULSE_PER_TURN 3200
 #define HALF_CIRCLE_IN_DEG 180
-#define WHEELS_RADIUS_45 9.23
-#define WHEELS_RADIUS_90 9.325
+// #define WHEELS_RADIUS_45 9.23
+// #define WHEELS_RADIUS_90 9.325 // 13B
+#define WHEELS_RADIUS_45 9.6
+#define WHEELS_RADIUS_90 9.6 // 13A
 #define M_GAUCHE 0
 #define M_DROIT 1
 #define FRONT_BUMPER 26
@@ -27,13 +29,13 @@
 #define SLOPE 0.000375
 #define SPEED_OFFSET 0.15
 #define DELAY_MBT 100
-#define MAX_INDEX 15 // NEED TO BE SETTED
+#define MAX_INDEX 19 // NEED TO BE SETTED
 
 bool run = false;
-// float distance[19] = {223, 50.5, 47.5, 50.5, 31, 50, 75, 45, 85, 85, 45, 75, 50, 31, 50.5, 47.5, 50.5, 223};
-// float angle[19] = {45, -90, -90, 90, -45, 90, -45, -10, 185, 10, 45, -90, 45, -90, 90, 90, -90};
-float distance[15] = {100.5, 49.5, 47.5, 49.5, 32.25, 52, 54.5, 54.5, 52, 32.25, 49.5, 47.5, 49.5, 100.5};  // Parcours maison
-float angle[14] = {90.0, -90.0, -90.0, 90.0, 45.0, -45.0, 185.0, 45.0, -45.0, -90.0, 90, 90, -90};
+float distance[19] =  {223, 50.5, 45, 50.5, 31, 46.5, 61, 49, 85, 85, 49, 61, 46.5, 31, 50.5, 45, 50.5, 223};
+float angle[19] =     {90, -90  , -90, 90, -45, 90, -45, -20, 180, 20, 45, -90, 45, -90, 90, 90, -90};
+// float distance[15] = {100.5, 49.5, 47.5, 49.5, 32.25, 52, 54.5, 54.5, 52, 32.25, 49.5, 47.5, 49.5, 100.5};  // Parcours maison
+// float angle[14] = {90.0, -90.0, -90.0, 90.0, 45.0, -45.0, 185.0, 45.0, -45.0, -90.0, 90, 90, -90};
 long leftEncoder = 0;
 long rightEncoder = 0;
 unsigned int index = 0;
@@ -149,16 +151,16 @@ void testFunc()
   }
   else
   {
-    MOTOR_SetSpeed(M_DROIT,0.01);
+    MOTOR_SetSpeed(M_DROIT,-0.01);
   }
 
   if(angle[0] > abs(leftEncoder))
   {
-    MOTOR_SetSpeed(M_GAUCHE,vitesse);
+    MOTOR_SetSpeed(M_GAUCHE,vitesse * 1);
   }
   else
   {
-    MOTOR_SetSpeed(M_GAUCHE,-0.01);
+    MOTOR_SetSpeed(M_GAUCHE,0.01);
   }
 
   if(angle[0] <= abs(rightEncoder) && angle[0] <= abs(leftEncoder))
