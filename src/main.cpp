@@ -2,7 +2,7 @@
  * @file main.cpp
  * @author Ro13bots with attitUdeS
  * @brief Code for a robot moving from point A to point B by making angles
- * @version 0.8
+ * @version 0.81
  * @date 2021-10-08
  * 
  * @copyright Copyright (c) 2021
@@ -15,9 +15,10 @@
 #define TOUR_CM 23.939
 #define PULSE_PER_TURN 3200
 #define HALF_CIRCLE_IN_DEG 180
-#define WHEELS_RADIUS 9.3
+#define WHEELS_RADIUS_45 9.23
+#define WHEELS_RADIUS_90 9.325
 #define M_GAUCHE 0
-#define M_DROITE 1
+#define M_DROIT 1
 #define FRONT_BUMPER 26
 #define LEFT_BUMPER 27
 #define BACK_BUMPER 28
@@ -25,15 +26,14 @@
 #define MAX_DELTA_STEPS 2000
 #define SLOPE 0.000375
 #define SPEED_OFFSET 0.15
-#define ANGLE_SPEED 0.4
 #define DELAY_MBT 100
-#define MAX_INDEX 19 // NEED TO BE SETTED
+#define MAX_INDEX 15 // NEED TO BE SETTED
 
 bool run = false;
-float distance[19] = {223 , 50.5 , 45, 50.5, 31, 57, 72.5, 39, 85 , 85, 39, 72.5, 57, 31, 50.5, 45, 50.5, 223};
-float angle[19] = {90,-90,-90,90,-45,90,-45,-10,185,10,45,-90,45,-90,90,90,-90 };
-// float distance[15] = {100.5, 49.5, 47.5, 49.5, 32.25, 52, 54.5, 54.5, 52, 32.25, 49.5, 47.5, 49.5, 100.5};  // Parcours maison
-// float angle[14] = {90.0, -90.0, -90.0, 90.0, 45.0, -45.0, 185.0, 45.0, -45.0, -90.0, 90, 90, -90};
+// float distance[19] = {223, 50.5, 47.5, 50.5, 31, 50, 75, 45, 85, 85, 45, 75, 50, 31, 50.5, 47.5, 50.5, 223};
+// float angle[19] = {45, -90, -90, 90, -45, 90, -45, -10, 185, 10, 45, -90, 45, -90, 90, 90, -90};
+float distance[15] = {100.5, 49.5, 47.5, 49.5, 32.25, 52, 54.5, 54.5, 52, 32.25, 49.5, 47.5, 49.5, 100.5};  // Parcours maison
+float angle[14] = {90.0, -90.0, -90.0, 90.0, 45.0, -45.0, 185.0, 45.0, -45.0, -90.0, 90, 90, -90};
 long leftEncoder = 0;
 long rightEncoder = 0;
 unsigned int index = 0;
@@ -98,7 +98,7 @@ void setup()
 {
   BoardInit();
 
- // TRANSFORME LES DISTANCES EN PULSE D'ENCODEUR
+  // TRANSFORME LES DISTANCES EN PULSE D'ENCODEUR
   for (int i = 0; i < MAX_INDEX; i++)
   {
     float tmp = 0;
@@ -110,21 +110,130 @@ void setup()
   for (int i = 0; i < (MAX_INDEX - 1); i++)
   {
     float tmp = 0;
-    tmp = (angle[i] * PI * WHEELS_RADIUS * PULSE_PER_TURN) / (HALF_CIRCLE_IN_DEG * TOUR_CM);
-    angle[i] = tmp;
+    float wheelsRadius = 0;
+    if(abs(angle[i]) < 90)
+    {
+      wheelsRadius = WHEELS_RADIUS_45;
+    }
+    else
+    {
+      wheelsRadius = WHEELS_RADIUS_90;
+    }
+    tmp = (angle[i] * PI * wheelsRadius * PULSE_PER_TURN) / (HALF_CIRCLE_IN_DEG * TOUR_CM);
+    angle[i] = floor(tmp);
   }
+}
+
+bool testMode = false;
+bool oneSet = true;
+long accAngle = 0;
+long accLAngle = 0;
+long accRAngle = 0;
+long errLAngle = 0;
+long errRAngle = 0;
+
+
+
+void testFunc()
+{
+  setEncodersVars();
+  float vitesse = 0.2;
+  if((angle[0] - 500) < leftEncoder)
+  {
+    vitesse = 0.1;
+  }
+
+  if(angle[0] > abs(rightEncoder))
+  {
+    MOTOR_SetSpeed(M_DROIT,vitesse * -1);
+  }
+  else
+  {
+    MOTOR_SetSpeed(M_DROIT,0.01);
+  }
+
+  if(angle[0] > abs(leftEncoder))
+  {
+    MOTOR_SetSpeed(M_GAUCHE,vitesse);
+  }
+  else
+  {
+    MOTOR_SetSpeed(M_GAUCHE,-0.01);
+  }
+
+  if(angle[0] <= abs(rightEncoder) && angle[0] <= abs(leftEncoder))
+  {
+    
+    delay(100);
+    setEncodersVars();
+    Serial.print("Angle : ");
+    Serial.println(angle[0]);
+    Serial.print("EncodeurL : ");
+    Serial.println(leftEncoder);
+    Serial.print("EncodeurR : ");
+    Serial.println(rightEncoder);
+    encodersReset();
+  }
+
+
+  // if((angle[0] - 500) < leftEncoder || (angle[0] - 500) < abs(rightEncoder))
+  // {
+  //   vitesse = 0.12;
+  // }
+
+  // if(angle[0] > leftEncoder || angle[0] > abs(rightEncoder))
+  // {
+  //   if(angle[0] > leftEncoder)
+  //   {
+  //   MOTOR_SetSpeed(M_GAUCHE,vitesse);
+  //   }
+  //   else
+  //   {
+  //     MOTOR_SetSpeed(M_GAUCHE,-0.08);
+  //   }
+  //   if(angle[0] > rightEncoder * -1)
+  //   {
+  //   MOTOR_SetSpeed(M_DROIT,vitesse * -1);
+  //   }
+  //   else
+  //   {
+  //     MOTOR_SetSpeed(M_DROIT,0.08);
+  //   }
+  // }
+  // else{
+  //   MOTOR_SetSpeed(M_DROIT,-0.08);
+  //   MOTOR_SetSpeed(M_GAUCHE,-0.08);
+  //   motorsOff();
+  //   delay(2000);
+  //   Serial.print("Angle : ");
+  //   Serial.println(angle[0]);
+  //   Serial.print("EncodeurL : ");
+  //   Serial.println(leftEncoder);
+  //   Serial.print("EncodeurR : ");
+  //   Serial.println(rightEncoder);
+  //   encodersReset();
+  // }
   
 }
 
 void loop()
 {
-
   if (digitalRead(RIGHT_BUMPER))
   {
     // POUR LES TEST
     run = false;
     mode = D;
   }
+
+  if(digitalRead(LEFT_BUMPER))
+  {
+    testMode = true;
+  }
+  if(testMode)
+  {
+    testFunc();
+  }
+
 
   if (digitalRead(BACK_BUMPER))
   {
@@ -137,17 +246,17 @@ void loop()
   }
   else
   {
-    motorsOff();
+    // motorsOff();
   }
-
 }
 
 // unsigned int indexOfIndex = 0;
 
 void moveAlgo()
 {
-
+  
   setEncodersVars();
+  float angleSpeed = 0.3;
 
   // PRINT DISTANCE ET ANGLE
   // if (index == indexOfIndex)
@@ -161,45 +270,64 @@ void moveAlgo()
   {
   case A:
 
-    if (abs(angle[index]) > abs(leftEncoder) && abs(angle[index]) > abs(rightEncoder))
+    if ((abs(angle[index]) -500) < abs(leftEncoder) || (abs(angle[index]) -500) < abs(rightEncoder))
+    {
+      angleSpeed = 0.1;
+    }
+
+    if (abs(angle[index]) > abs(leftEncoder) || abs(angle[index]) > abs(rightEncoder))
     {
 
       if (angle[index] < 0)
       {
-        if (abs(angle[index]) <= abs(leftEncoder)) 
+        if (abs(angle[index]) > abs(leftEncoder) && abs(angle[index]) > abs(rightEncoder))
         {
-          motors(0, -1, ANGLE_SPEED);
-        }
-        else if (abs(angle[index]) <= abs(rightEncoder))
-        {
-          motors(1, 0, ANGLE_SPEED);
+          motors(1, -1, angleSpeed);
         }
         else
         {
-          motors(1, -1, ANGLE_SPEED);
+          if (abs(angle[index]) <= abs(rightEncoder))
+          {
+            motors(1, 0, angleSpeed);
+          }
+          if (abs(angle[index]) <= abs(leftEncoder))
+          {
+            motors(0, -1, angleSpeed);
+          }
         }
       }
       else if (angle[index] > 0)
       {
-        if (abs(angle[index]) <= abs(leftEncoder))
+        if (abs(angle[index]) > abs(leftEncoder) && abs(angle[index]) > abs(rightEncoder))
         {
-          motors(0, 1, ANGLE_SPEED);
-        }
-        else if (abs(angle[index]) <= abs(rightEncoder))
-        {
-          motors(-1, 0, ANGLE_SPEED);
+          motors(-1, 1, angleSpeed);
         }
         else
         {
-          motors(-1, 1, ANGLE_SPEED);
+          if (abs(angle[index]) <= abs(rightEncoder))
+          {
+            motors(-1, 0, angleSpeed);
+          }
+          if (abs(angle[index]) <= abs(leftEncoder))
+          {
+            motors(0, 1, angleSpeed);
+          }
         }
       }
     }
     else
     {
       motorsOff();
+
+      Serial.print("Angle : ");
+      Serial.println(angle[index]);
+      Serial.print("LeftEncoder : ");
+      Serial.println(leftEncoder);
+      Serial.print("RightEncoder : ");
+      Serial.println(rightEncoder);
       index++;
       delay(DELAY_MBT);
+      
       encodersReset();
       mode = D;
     }
@@ -242,7 +370,7 @@ void motors(char left_motor, char right_motor, float speed)
   }
 
   MOTOR_SetSpeed(M_GAUCHE, speed * left_motor);
-  MOTOR_SetSpeed(M_DROITE, speed * right_motor + (pid * right_motor));
+  MOTOR_SetSpeed(M_DROIT, speed * right_motor + (pid * right_motor));
 }
 
 float motorsPid()
@@ -250,40 +378,38 @@ float motorsPid()
 
   long error = abs(leftEncoder) - abs(rightEncoder);
   return (error * kp);
-
 }
 
 void motorsOff()
 {
   MOTOR_SetSpeed(M_GAUCHE, 0.0);
-  MOTOR_SetSpeed(M_DROITE, 0.0);
+  MOTOR_SetSpeed(M_DROIT, 0.0);
 }
 
 void encodersReset()
 {
   ENCODER_Reset(M_GAUCHE);
-  ENCODER_Reset(M_DROITE);
+  ENCODER_Reset(M_DROIT);
   setEncodersVars();
 }
 
 void setEncodersVars()
 {
   leftEncoder = ENCODER_Read(M_GAUCHE);
-  rightEncoder = ENCODER_Read(M_DROITE);
+  rightEncoder = ENCODER_Read(M_DROIT);
 }
-
 
 float setSpeed()
 {
   float speed = 0;
 
-  if(distance[index] > (2 * MAX_DELTA_STEPS))
+  if (distance[index] > (2 * MAX_DELTA_STEPS))
   {
-    if(leftEncoder < MAX_DELTA_STEPS)
+    if (leftEncoder < MAX_DELTA_STEPS)
     {
       speed = SLOPE * leftEncoder + SPEED_OFFSET;
     }
-    else if(distance[index] - MAX_DELTA_STEPS < leftEncoder)
+    else if (distance[index] - MAX_DELTA_STEPS < leftEncoder)
     {
       speed = SLOPE * (distance[index] - leftEncoder) + SPEED_OFFSET;
     }
@@ -294,7 +420,7 @@ float setSpeed()
   }
   else
   {
-    if(distance[index] * 0.5 > leftEncoder)
+    if (distance[index] * 0.5 > leftEncoder)
     {
       speed = SLOPE * leftEncoder + SPEED_OFFSET;
     }
