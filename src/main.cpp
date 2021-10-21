@@ -434,5 +434,3 @@ float setSpeed()
 
   return speed;
 }
-
-//Testdfgfdhgru
