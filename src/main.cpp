@@ -32,6 +32,17 @@
 #define DELAY_MBT 100
 #define MAX_INDEX 19 // NEED TO BE SETTED
 
+// Suiveur de ligne
+QTRSensors qtr;
+const uint8_t SensorCount = 8;
+uint16_t sensorValues[SensorCount];
+#define KP 0.0025
+#define KD 0.0
+double ErreurPrecedente = 0;
+#define Centre 3500
+#define VITESSE_MAX 0.5
+
+
 bool run = false;
 float distance[19] =  {223, 50.5, 45, 50.5, 31, 46.5, 61, 49, 85, 85, 49, 61, 46.5, 31, 50.5, 45, 50.5, 223};
 float angle[19] =     {90, -90  , -90, 90, -45, 90, -45, -20, 180, 20, 45, -90, 45, -90, 90, 90, -90};
@@ -41,6 +52,7 @@ long leftEncoder = 0;
 long rightEncoder = 0;
 unsigned int index = 0;
 const float kp = 0.0025;
+
 
 typedef enum t_mode
 {
@@ -436,8 +448,45 @@ float setSpeed()
   return speed;
 }
 
-void SuiveurLigne()
+void CalibrationSuiveurLigne()
 {
+    // configure the sensors
+    qtr.setTypeAnalog();
+    qtr.setSensorPins((const uint8_t[]){A0, A1, A2, A3, A4, A5, A6, A7}, SensorCount);
+    qtr.setEmitterPin(2);
 
+    delay(500);
+    pinMode(LED_BUILTIN, OUTPUT);
+    digitalWrite(LED_BUILTIN, HIGH); // turn on Arduino's LED to indicate we are in calibration mode
 
+    // analogRead() takes about 0.1 ms on an AVR.
+    // 0.1 ms per sensor * 4 samples per sensor read (default) * 6 sensors
+    // * 10 reads per calibrate() call = ~24 ms per calibrate() call.
+    // Call calibrate() 400 times to make calibration take about 10 seconds.
+    for (uint16_t i = 0; i < 3000; i++)
+    {
+        qtr.calibrate();
+    }
+    digitalWrite(LED_BUILTIN, LOW); // turn off Arduino's LED to indicate we are through with calibration
+}
+
+void SuiveurLigneSetup()
+{
+    motorsOff();
+
+  // Initialisation Suiveur de ligne
+    CalibrationSuiveurLigne();
+}
+
+void SuiveurLigneLoop()
+{
+    // Trouver la position de la ligne
+    uint16_t position = qtr.readLineBlack(sensorValues);
+
+    int erreur = Centre - position;
+    int PID = KP * erreur + KD * (erreur - ErreurPrecedente);
+    ErreurPrecedente = erreur;
+
+    MOTOR_SetSpeed(M_GAUCHE, constrain(VITESSE_MAX - PID, 0, VITESSE_MAX));
+    MOTOR_SetSpeed(M_DROIT, constrain(VITESSE_MAX + PID, 0, VITESSE_MAX));
 }
