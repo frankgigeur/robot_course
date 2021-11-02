@@ -1,4 +1,5 @@
 #include <QTRSensors.h>
+#include <Arduino.h>
 
 // This example is designed for use with eight RC QTR sensors. These
 // reflectance sensors should be connected to digital pins 3 to 10. The
