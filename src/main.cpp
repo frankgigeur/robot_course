@@ -11,6 +11,7 @@
 #include <Arduino.h>
 #include <math.h>
 #include <LibRobus.h>
+#include <QTRSensors.h>
 
 #define TOUR_CM 23.939
 #define PULSE_PER_TURN 3200
@@ -433,4 +434,9 @@ float setSpeed()
   }
 
   return speed;
+}
+
+void SuiveurLigne()
+{
+
 }
